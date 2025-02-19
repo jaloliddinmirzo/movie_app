@@ -1,50 +1,127 @@
 import 'package:flutter/material.dart';
-import 'package:movie_app/data/models/move_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:movie_app/bloc/movie_detail_bloc/movie_detail_bloc.dart';
+import 'package:movie_app/common/utils/enums/statuses.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-class MovieDetailScreen extends StatelessWidget {
-  final Result movie;
+class MovieDetailScreen extends StatefulWidget {
+  const MovieDetailScreen({super.key});
 
-  const MovieDetailScreen({super.key, required this.movie});
+  @override
+  State<MovieDetailScreen> createState() => _MovieDetailScreenState();
+}
+
+class _MovieDetailScreenState extends State<MovieDetailScreen> {
+  late YoutubePlayerController _controller;
+  int movieIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black87,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Image.network(
-            "https://image.tmdb.org/t/p/w500${movie.posterPath}",
-            width: double.infinity,
-            height: 500,
-            fit: BoxFit.fill,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              movie.title.toString(),
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              "⭐ ${movie.voteAverage} | 📅 ${movie.releaseDate}",
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              movie.overview.toString(),
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
+      body: BlocBuilder<MovieDetailBloc, MovieDetailState>(
+        builder: (context, state) {
+          if (state.status == Statuses.Loading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state.status == Statuses.Success) {
+            final videos = state.movieDetails?.results ?? [];
+            if (videos.isEmpty) {
+              return const Center(
+                child: Text("Hech qanday video topilmadi.",
+                    style: TextStyle(color: Colors.white)),
+              );
+            }
+
+            final currentVideo = videos[movieIndex];
+
+            _controller = YoutubePlayerController(
+              initialVideoId: currentVideo.key.toString(),
+              flags: const YoutubePlayerFlags(autoPlay: false),
+            );
+
+            return Builder(
+              builder: (context) {
+                return SafeArea(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      YoutubePlayer(controller: _controller, aspectRatio: 16 / 9),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              currentVideo.name.toString(),
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "📺 Kanal: ${currentVideo.site}", // Agar kanal nomi bo‘lsa, uni ko‘rsatish
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "👁️ Published At: ${currentVideo.publishedAt?.split(" ")}", // Ko‘rishlar soni API'dan olinishi kerak
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: videos.length,
+                          itemBuilder: (context, index) {
+                            final video = videos[index];
+                            return ListTile(
+                              contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              leading: Image.network(
+                                "https://img.youtube.com/vi/${video.key}/0.jpg",
+                                width: 100,
+                                fit: BoxFit.cover,
+                              ),
+                              title: Text(
+                                video.name.toString(),
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              subtitle: Text(
+                                "📅 ${video.publishedAt} | ${video.site}",
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  movieIndex = index;
+                                  _controller.load(videos[index].key.toString());
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            );
+          } else if (state.status == Statuses.Error) {
+            return Center(
+              child: Text(state.errorMessage.toString(),
+                  style: const TextStyle(color: Colors.red)),
+            );
+          }
+          return Container();
+        },
       ),
     );
   }

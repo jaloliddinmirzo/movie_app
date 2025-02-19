@@ -1,8 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:movie_app/bloc/movie_event.dart';
-import 'package:movie_app/bloc/movie_sate.dart';
+import 'package:movie_app/bloc/movie_bloc/movie_event.dart';
+import 'package:movie_app/bloc/movie_bloc/movie_sate.dart';
 import 'package:movie_app/data/repositories/movie_repo.dart';
 
 class MovieBloc extends Bloc<MovieEvent, MovieSate> {

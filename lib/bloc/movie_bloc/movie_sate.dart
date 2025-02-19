@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:movie_app/data/models/move_model.dart';
+import 'package:movie_app/data/models/movie_model/move_model.dart';
 
 abstract class MovieSate extends Equatable {}
 
