@@ -74,7 +74,7 @@ class CustomSearchDelegate extends SearchDelegate {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => MovieInfoScreen(movie: movie.id,),
+                      builder: (context) => MovieInfoScreen(movie: movie),
                     ),
                   );
                 },
@@ -160,7 +160,7 @@ class CustomSearchDelegate extends SearchDelegate {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => MovieInfoScreen(movie: movie,),
+                    builder: (context) => MovieInfoScreen(movie: movie),
                   ),
                 );
               },
